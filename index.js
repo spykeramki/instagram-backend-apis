@@ -59,7 +59,6 @@ app.post('/login', async (request, response) => {
     }
     else{
         const passwordCheck = await bcrypt.compare(password, dbUser.password);
-        console.log(dbUser.password)
         if (passwordCheck===true){
             const payload = {
                 username: username,
