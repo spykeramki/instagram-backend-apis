@@ -28,7 +28,7 @@ const initializeDatabaseAndServer = async () => {
 
 initializeDatabaseAndServer()
 
-app.post("/users/", async(request, response) => {
+app.post("/users/signup", async(request, response) => {
     const{email, full_name, username, password} = request.body;
     const hashedPassword = await bcrypt.hash(password,10);
     const checkUserQuery = `SELECT * FROM user WHERE username='${username}'`
@@ -63,7 +63,7 @@ app.post('/login', async (request, response) => {
             const payload = {
                 username: username,
             };
-        const jwtToken = await jwt.sign(payload, 'qwertyuiop')
+        const jwtToken = jwt.sign(payload, 'qwertyuiop')
         response.set('Access-Control-Allow-Origin', '*');
         response.send({jwtToken})
         }
@@ -74,3 +74,4 @@ app.post('/login', async (request, response) => {
         }
     }
 })
+

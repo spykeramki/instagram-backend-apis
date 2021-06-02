@@ -1,7 +1,7 @@
 GET http://localhost:3005/
 
 ###
-POST http://localhost:3005/users/
+POST http://localhost:3005/users/signup
 Content-Type: application/json
 
 {   
