@@ -18,7 +18,7 @@ const initializeDatabaseAndServer = async () => {
         });
         const port = process.env.PORT || 3005;
         app.listen(port, () => {
-            console.log(`Started server at port ${port}...`)
+            console.log(`Started server at port ${port}...`)   //3306
         });
     }
     catch(e){
@@ -28,18 +28,42 @@ const initializeDatabaseAndServer = async () => {
 
 initializeDatabaseAndServer()
 
+const authenticateUser = (request, response, next) => {
+    let jwtToken;
+    const authHeader = request.headers['authorization'];
+    if (authHeader!==undefined){
+        jwtToken = authHeader.split(" ")[1];
+    }
+    if (jwtToken === undefined) {
+        response.status(401);
+        response.send('Invalid Access Token');
+    }
+    else{
+        jwt.verify(jwtToken, "qwertyuiop", (error, payload) => {
+            if (error){
+                response.status(401);
+                response.send('Invalid Access Token');
+            }
+            else{
+                request.username=payload.username
+                next();
+            }
+        });
+    }
+};
+
 app.post("/users/signup", async(request, response) => {
-    const{email, full_name, username, password} = request.body;
+    const{email, fullName, username, password} = request.body;
     const hashedPassword = await bcrypt.hash(password,10);
     const checkUserQuery = `SELECT * FROM user WHERE username='${username}'`
     const dbUser = await db.get(checkUserQuery);
     if (dbUser===undefined){
         const signUpUserQuery = `
             INSERT INTO user(email, full_name, username, password) 
-            VALUES ('${email}', '${full_name}', '${username}', '${hashedPassword}');`;
+            VALUES ('${email}', '${fullName}', '${username}', '${hashedPassword}');`;
             await db.run(signUpUserQuery);
             response.set('Access-Control-Allow-Origin', '*');
-            response.send(`Welcome ${full_name}`)
+            response.send(`Welcome ${fullName}`)
     }
     else{
         response.set('Access-Control-Allow-Origin', '*');
@@ -63,9 +87,9 @@ app.post('/login', async (request, response) => {
             const payload = {
                 username: username,
             };
-        const jwtToken = jwt.sign(payload, 'qwertyuiop')
-        response.set('Access-Control-Allow-Origin', '*');
-        response.send({jwtToken})
+            const jwt_token = jwt.sign(payload, 'qwertyuiop')
+            response.set('Access-Control-Allow-Origin', '*');
+            response.send({jwt_token})
         }
         else{
             response.set('Access-Control-Allow-Origin', '*');
@@ -75,3 +99,25 @@ app.post('/login', async (request, response) => {
     }
 })
 
+app.get('/home/posts', authenticateUser, async (request, response) => {
+    const {username} = request;
+    const getPostsQuery = `
+    SELECT 
+        post.post_id as id,
+        user.profile_image_url as friend_profile_image,
+        user.full_name as friend_name,
+        post.post_url as post_content,
+        post.post_created_time as friend_post_time
+    FROM (post 
+        JOIN user ON post.user_id = user.user_id) AS T 
+        JOIN followers ON followers.follower_id = T.user_id
+    WHERE followers.following_id = (
+        SELECT user.user_id
+        FROM user
+            JOIN followers ON user.user_id = followers.following_id
+        WHERE user.username = '${username}'
+);`;
+    const postsResponse=await db.all(getPostsQuery);
+    response.set('Access-Control-Allow-Origin', '*');
+    response.send({postsResponse});
+});
