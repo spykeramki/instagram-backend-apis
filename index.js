@@ -4,7 +4,7 @@ const path = require('path');
 const{open}= require('sqlite');
 const sqlite3 = require('sqlite3');
 const jwt= require('jsonwebtoken');
-const { request } = require('express');
+const { request, response } = require('express');
 
 const db_path = path.join(__dirname, 'instagram.db');
 
@@ -126,7 +126,6 @@ app.get('/home/posts', authenticateUser, async (request, response) => {
 
 app.get('/home/posts/:postId/comments', authenticateUser, async(request, response) => {
     const {postId} = request.params;
-    const{username} = request
     const getPostCommentsQuery = `
         SELECT
             comment.comment_id AS id,
@@ -142,3 +141,68 @@ app.get('/home/posts/:postId/comments', authenticateUser, async(request, respons
     const data= await db.all(getPostCommentsQuery);
     response.send({data});
 });
+
+app.get('/home/friendsuggestions', authenticateUser,async(request, response) => {
+    const {username} = request
+    const getSuggestionsQuery = `
+    SELECT 
+        user.user_id,
+        user.pet_name,
+        user.full_name
+        
+    FROM user 
+        JOIN followers ON user.user_id=followers.follower_id
+    WHERE 
+    followers.following_id = (
+        SELECT 
+            user.user_id
+        FROM user
+            JOIN followers ON user.user_id = followers.following_id
+        WHERE user.username = '${username}')
+    UNION
+    SELECT 
+        user.user_id,
+        user.pet_name,
+        user.full_name
+    FROM user 
+        JOIN followers ON user.user_id=followers.following_id
+    WHERE 
+    followers.follower_id = (
+        SELECT 
+            user.user_id
+            
+        FROM user 
+            JOIN followers ON user.user_id=followers.follower_id
+        WHERE 
+        followers.following_id = (
+            SELECT 
+                user.user_id
+            FROM user
+                JOIN followers ON user.user_id = followers.following_id
+            WHERE user.username = '${username}'))
+    EXCEPT
+    SELECT 
+        user.user_id,
+        user.pet_name,
+        user.full_name
+    FROM user 
+        JOIN followers ON user.user_id=followers.following_id
+    WHERE 
+    followers.follower_id = (
+        SELECT user.user_id
+        FROM user
+            JOIN followers ON user.user_id = followers.follower_id
+        WHERE user.username = '${username}') 
+    EXCEPT
+        SELECT 
+            user_id,
+            user.pet_name,
+            user.full_name
+        FROM user
+        WHERE username='${username}'
+        
+    ;`;
+        console.log(username)
+    const data = await db.all(getSuggestionsQuery)
+    response.send({data})
+})

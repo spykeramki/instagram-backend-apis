@@ -52,3 +52,13 @@ UPDATE post SET post_url = "https://res.cloudinary.com/dwlftsdge/image/upload/v1
 UPDATE post SET post_url = "https://res.cloudinary.com/dwlftsdge/image/upload/v1622907681/Instagram%20App/Nature%20images/conceptual-art-representing-quiet-mind-chaos-vector-illustration_1196-897_xnz1xk.jpg" WHERE post_id= 18;
 UPDATE post SET post_url = "https://res.cloudinary.com/dwlftsdge/image/upload/v1622887822/Instagram%20App/Nature%20images/istockphoto-1177116437-612x612_vzleo6.jpg" WHERE post_id= 19;
 UPDATE post SET post_url = "https://res.cloudinary.com/dwlftsdge/image/upload/v1622887822/Instagram%20App/Nature%20images/0132_637324252136928732_agcaf9.jpg" WHERE post_id= 21;
+
+ALTER TABLE user
+
+INSERT INTO user(pet_name) VALUES('ramram') WHERE user_id=1;
+UPDATE user SET pet_name = 'krishna' WHERE user_id=2;
+UPDATE user SET pet_name = 'lalli' WHERE user_id=3;
+UPDATE user SET pet_name = 'megha' WHERE user_id=4;
+UPDATE user SET pet_name = 'madhu' WHERE user_id=5;
+UPDATE user SET pet_name = 'kavya' WHERE user_id=6;
+UPDATE user SET pet_name = 'ramram' WHERE user_id=1;
