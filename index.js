@@ -146,9 +146,10 @@ app.get('/home/friendsuggestions', authenticateUser,async(request, response) => 
     const {username} = request
     const getSuggestionsQuery = `
     SELECT 
-        user.user_id,
+        user.user_id as id,
+        user.profile_image_url as friend_profile_image,
         user.pet_name,
-        user.full_name
+        user.full_name as friend_name
         
     FROM user 
         JOIN followers ON user.user_id=followers.follower_id
@@ -161,9 +162,10 @@ app.get('/home/friendsuggestions', authenticateUser,async(request, response) => 
         WHERE user.username = '${username}')
     UNION
     SELECT 
-        user.user_id,
+        user.user_id as id,
+        user.profile_image_url as friend_profile_image,
         user.pet_name,
-        user.full_name
+        user.full_name as friend_name
     FROM user 
         JOIN followers ON user.user_id=followers.following_id
     WHERE 
@@ -182,9 +184,10 @@ app.get('/home/friendsuggestions', authenticateUser,async(request, response) => 
             WHERE user.username = '${username}'))
     EXCEPT
     SELECT 
-        user.user_id,
+        user.user_id as id,
+        user.profile_image_url as friend_profile_image,
         user.pet_name,
-        user.full_name
+        user.full_name as friend_name
     FROM user 
         JOIN followers ON user.user_id=followers.following_id
     WHERE 
@@ -195,14 +198,15 @@ app.get('/home/friendsuggestions', authenticateUser,async(request, response) => 
         WHERE user.username = '${username}') 
     EXCEPT
         SELECT 
-            user_id,
+            user.user_id as id,
+            user.profile_image_url as friend_profile_image,
             user.pet_name,
-            user.full_name
+            user.full_name as friend_name
         FROM user
         WHERE username='${username}'
         
     ;`;
-        console.log(username)
+    
     const data = await db.all(getSuggestionsQuery)
     response.send({data})
 })
