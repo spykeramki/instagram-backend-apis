@@ -109,15 +109,18 @@ app.get('/home/posts', authenticateUser, async (request, response) => {
         user.full_name as friend_name,
         post.post_url as post_content,
         post.post_created_time as friend_post_time,
-        (SELECT full_name FROM user WHERE username='${username}') AS user
+        (SELECT full_name FROM user WHERE username='${username}') AS user,
+        COUNT(post_likes.id) AS likes
     FROM (post 
         JOIN user ON post.user_id = user.user_id) AS T 
         JOIN followers ON followers.follower_id = T.user_id
+        JOIN post_likes ON post.post_id = post_likes.post_id
     WHERE followers.following_id = (
         SELECT user.user_id
         FROM user
             JOIN followers ON user.user_id = followers.following_id
         WHERE user.username = '${username}')
+    GROUP BY post.post_id
     ORDER BY post.post_created_time DESC;`;
     const postsResponse=await db.all(getPostsQuery);
     response.set('Access-Control-Allow-Origin', '*');
