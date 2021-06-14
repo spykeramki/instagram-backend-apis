@@ -119,13 +119,76 @@ app.get('/home/posts', authenticateUser, async (request, response) => {
         SELECT user.user_id
         FROM user
             JOIN followers ON user.user_id = followers.following_id
-        WHERE user.username = '${username}')
+        WHERE user.username = '${username}') 
     GROUP BY post.post_id
     ORDER BY post.post_created_time DESC;`;
     const postsResponse=await db.all(getPostsQuery);
     response.set('Access-Control-Allow-Origin', '*');
     response.send({postsResponse});
 });
+
+app.post('/home/posts/:postId/likes', authenticateUser, async (request, response) => {
+    const{postId} = request.params
+    const{username} = request
+    const likeDetails  = request.body
+    const {likedTime} = likeDetails
+    const getLikeQuery = `
+        SELECT 
+            *
+        FROM 
+            post_likes
+            JOIN user ON user.user_id = post_likes.user_id
+        WHERE 
+            post_likes.post_id = ${postId} AND user.username = '${username}';`;
+    const dbLike = await db.get(getLikeQuery)
+    if (dbLike === undefined){
+        const setLikeQuery = `
+            INSERT INTO
+                post_likes(post_id, user_id, liked, liked_time)
+            SELECT 
+                ${postId}, user_id, true, '${likedTime}'
+            FROM user
+            WHERE user.username = '${username}';`;
+        await db.run(setLikeQuery);
+        response.send("success")
+    }
+    else{
+        const deleteLikeQuery = `
+            DELETE FROM
+                post_likes
+            WHERE 
+                post_id=${postId} 
+                AND user_id = (
+                SELECT 
+                    user_id
+                FROM 
+                    user
+                WHERE 
+                    username='${username}');`;
+        await db.run(deleteLikeQuery);
+        response.send({liked:false})
+    }
+})
+
+app.get('/home/post/:postId/liked', authenticateUser, async(request, response) => {
+    const{postId} = request.params
+    const{username} = request
+    const getLikeQuery = `
+        SELECT 
+            *
+        FROM 
+            post_likes
+            JOIN user ON user.user_id = post_likes.user_id
+        WHERE 
+            post_likes.post_id = ${postId} AND user.username = '${username}';`;
+    const dbLiked = await db.get(getLikeQuery)
+    if (dbLiked===undefined){
+        response.send({liked:false})
+    }
+    else{
+        response.send({liked:true})
+    }
+})
 
 app.get('/home/posts/:postId/comments', authenticateUser, async(request, response) => {
     const {postId} = request.params;
@@ -144,6 +207,23 @@ app.get('/home/posts/:postId/comments', authenticateUser, async(request, respons
     const data= await db.all(getPostCommentsQuery);
     response.send({data});
 });
+
+app.post('/home/posts/:postId/comments', authenticateUser, async(request, response) => {
+    const {postId} = request.params;
+    const {username} = request
+    const {comment, commentTime} = request.body
+    const postCommentQuery = `
+        INSERT INTO
+            comment(user_id,post_id,comment_text, commented_time, liked_status)
+        SELECT 
+            user_id, ${postId}, '${comment}', '${commentTime}', true
+        FROM 
+            user
+        WHERE 
+            user.username='${username}';`;
+    await db.run(postCommentQuery)
+    response.send('comment updated')
+})
 
 app.get('/home/friendsuggestions', authenticateUser,async(request, response) => {
     const {username} = request
@@ -213,3 +293,4 @@ app.get('/home/friendsuggestions', authenticateUser,async(request, response) => 
     const data = await db.all(getSuggestionsQuery)
     response.send({data})
 })
+

@@ -17,8 +17,8 @@ POST http://localhost:3005/login
 Content-Type: application/json
 
 {
-    "username" : "kavya123",
-    "password" : "kavya123"
+    "username" : "madhu123",
+    "password" : "madhu123"
 }
 
 ###
@@ -32,3 +32,27 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1hZ
 ###
 GET http://localhost:3005/home/friendsuggestions
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImthdnlhMTIzIiwiaWF0IjoxNjIzMzI0OTk2fQ.iTsncLgjtMMfKxqfiola7FgIc32jjUuWG8CeQ0wpM0k
+
+### 
+POST http://localhost:3005/home/posts/8/likes
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1hZGh1MTIzIiwiaWF0IjoxNjIzNTc5MTg4fQ.-zPjzoWnhOlly43mXNMKYX79Nfyl7lS-foCTmEwLTnY
+
+{
+    "likedTime": "2021-06-13 16:17:10",
+    "liked": false
+}
+
+###
+GET http://localhost:3005/home/post/11/liked
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1hZGh1MTIzIiwiaWF0IjoxNjIzNTc5MTg4fQ.-zPjzoWnhOlly43mXNMKYX79Nfyl7lS-foCTmEwLTnY
+
+###
+POST http://localhost:3005/home/posts/0/comments
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1hZGh1MTIzIiwiaWF0IjoxNjIzNTc5MTg4fQ.-zPjzoWnhOlly43mXNMKYX79Nfyl7lS-foCTmEwLTnY
+
+{
+    "comment":"Hello, It is beautiful!",
+    "commentedTime":"2021-06-13 16:17:10"
+}
