@@ -113,12 +113,11 @@ app.get('/home/posts', authenticateUser, async (request, response) => {
         COUNT(post_likes.id) AS likes
     FROM (post 
         JOIN user ON post.user_id = user.user_id) AS T 
-        JOIN followers ON followers.follower_id = T.user_id
+        JOIN followers ON followers.following_id = T.user_id
         JOIN post_likes ON post.post_id = post_likes.post_id
-    WHERE followers.following_id = (
+    WHERE followers.follower_id = (
         SELECT user.user_id
         FROM user
-            JOIN followers ON user.user_id = followers.following_id
         WHERE user.username = '${username}') 
     GROUP BY post.post_id
     ORDER BY post.post_created_time DESC;`;
@@ -294,3 +293,49 @@ app.get('/home/friendsuggestions', authenticateUser,async(request, response) => 
     response.send({data})
 })
 
+app.get('/owner', authenticateUser, async(request, response) => {
+    const {username} = request
+    const getOwnerDetails = `
+        SELECT 
+            user.user_id,
+            user.pet_name,
+            user.profile_image_url AS profile_picture,
+            user.full_name,
+            COUNT(post.post_id) as posts,
+            (SELECT 
+                COUNT(followers.follower_id)
+            FROM 
+                followers 
+                JOIN user ON followers.following_id = user.user_id
+            WHERE 
+                user.username = '${username}') as followers,
+            (SELECT 
+                COUNT(followers.following_id)
+            FROM 
+                followers 
+                JOIN user ON followers.follower_id = user.user_id
+            WHERE 
+                user.username = '${username}') as following
+        FROM user 
+            JOIN post ON post.user_id = user.user_id
+        WHERE user.username = '${username}';`;
+    const data = await db.get(getOwnerDetails)
+    response.send(data)
+})
+
+app.get('/owner/posts', authenticateUser, async (request, response) => {
+    const{username} = request
+    const getOwnerPostsQuery = `
+        SELECT 
+            post.post_id,
+            post.post_type,
+            post.post_url,
+            post.post_created_time
+        FROM 
+            post
+            JOIN user ON post.user_id = user.user_id
+        WHERE 
+            user.username = '${username}';`;
+    const data = await db.all(getOwnerPostsQuery);
+    response.send({data})
+})
