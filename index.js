@@ -114,7 +114,7 @@ app.get('/home/posts', authenticateUser, async (request, response) => {
     FROM (post 
         JOIN user ON post.user_id = user.user_id) AS T 
         JOIN followers ON followers.following_id = T.user_id
-        JOIN post_likes ON post.post_id = post_likes.post_id
+        LEFT JOIN post_likes ON post.post_id = post_likes.post_id
     WHERE followers.follower_id = (
         SELECT user.user_id
         FROM user
@@ -338,4 +338,19 @@ app.get('/owner/posts', authenticateUser, async (request, response) => {
             user.username = '${username}';`;
     const data = await db.all(getOwnerPostsQuery);
     response.send({data})
+})
+
+app.post('/owner/posts', authenticateUser, async (request, response) => {
+    const{username} = request
+    const{postType, postUrl, postCreatedTime, postDescription, postPrivacy} = request.body
+    const setPostQuery = `
+        INSERT INTO 
+            post(post_type, post_url, user_id, post_created_time, post_description, post_privacy)
+        SELECT 
+            '${postType}', '${postUrl}', user_id, '${postCreatedTime}', '${postDescription}', '${postPrivacy}'
+        FROM user
+        WHERE 
+            user.username = '${username}';`;
+    await db.run(setPostQuery)
+    response.send("Posted Successfully")
 })

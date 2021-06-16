@@ -146,3 +146,20 @@ insert into post_likes (id, post_id, user_id, liked, liked_time) values (79, 20,
 insert into post_likes (id, post_id, user_id, liked, liked_time) values (80, 20, 3, true, '2021-05-03 20:57:04');
 
 create table post_likes (id INTEGER NOT NULL PRIMARY KEY, post_id INTEGER, user_id INTEGER, liked BOOLEAN, liked_time DATETIME, FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE, FOREIGN KEY (user_id) REFERENCES user(user_id));
+
+SELECT 
+        post.post_id as id,
+        user.profile_image_url as friend_profile_image,
+        user.full_name as friend_name,
+        post.post_created_time as friend_post_time,
+        (SELECT full_name FROM user WHERE username='krish123') AS user
+    FROM (post 
+        JOIN user ON post.user_id = user.user_id) AS T 
+        JOIN followers ON followers.following_id = T.user_id
+        LEFT JOIN post_likes ON post.post_id = post_likes.post_id
+    WHERE followers.follower_id = (
+        SELECT user.user_id
+        FROM user
+        WHERE user.username = 'krish123') 
+    GROUP BY post.post_id
+    ORDER BY post.post_created_time DESC;
