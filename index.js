@@ -335,7 +335,8 @@ app.get('/owner/posts', authenticateUser, async (request, response) => {
             post
             JOIN user ON post.user_id = user.user_id
         WHERE 
-            user.username = '${username}';`;
+            user.username = '${username}'
+        ORDER BY post.post_created_time DESC;`;
     const data = await db.all(getOwnerPostsQuery);
     response.send({data})
 })
@@ -353,4 +354,86 @@ app.post('/owner/posts', authenticateUser, async (request, response) => {
             user.username = '${username}';`;
     await db.run(setPostQuery)
     response.send("Posted Successfully")
+})
+
+app.post('/home/posts/:postId/saved', authenticateUser, async (request, response) => {
+    const{postId} = request.params
+    const{username} = request
+    const savedPostDetails  = request.body
+    const {savedTime} = savedPostDetails
+    const getSavedPostQuery = `
+        SELECT 
+            *
+        FROM 
+        saved_posts
+            JOIN user ON user.user_id = saved_posts.user_id
+        WHERE 
+            saved_posts.post_id = ${postId} AND user.username = '${username}';`;
+    const dbSaved = await db.get(getSavedPostQuery)
+    if (dbSaved === undefined){
+        const setSavedPostQuery = `
+            INSERT INTO
+                saved_posts(post_id, user_id, saved_time)
+            SELECT 
+                ${postId}, user_id, '${savedTime}'
+            FROM user
+            WHERE user.username = '${username}';`;
+        await db.run(setSavedPostQuery);
+        response.send("success")
+    }
+    else{
+        const removeSavedQuery = `
+            DELETE FROM
+                saved_posts
+            WHERE 
+                post_id=${postId} 
+                AND user_id = (
+                SELECT 
+                    user_id
+                FROM 
+                    user
+                WHERE 
+                    username='${username}');`;
+        await db.run(removeSavedQuery);
+        response.send("success")
+    }
+})
+
+app.get('/home/post/:postId/saved', authenticateUser, async(request, response) => {
+    const{postId} = request.params
+    const{username} = request
+    const getSavedPostQuery = `
+        SELECT 
+            *
+        FROM 
+        saved_posts
+            JOIN user ON user.user_id = saved_posts.user_id
+        WHERE 
+            saved_posts.post_id = ${postId} AND user.username = '${username}';`;
+    const dbSaved = await db.get(getSavedPostQuery)
+    if (dbSaved===undefined){
+        response.send({saved:false})
+    }
+    else{
+        response.send({saved:true})
+    }
+})
+
+app.get('/owner/saved', authenticateUser, async (request, response) => {
+    const{username} = request
+    const getOwnerSavedPostsQuery = `
+        SELECT 
+            post.post_id,
+            post.post_type,
+            post.post_url,
+            post.post_created_time
+        FROM 
+            post
+            JOIN saved_posts ON post.post_id = saved_posts.post_id
+            JOIN user ON saved_posts.user_id = user.user_id
+        WHERE 
+            user.username = '${username}'
+        ORDER BY post.post_created_time DESC;`;
+    const data = await db.all(getOwnerSavedPostsQuery);
+    response.send({data})
 })

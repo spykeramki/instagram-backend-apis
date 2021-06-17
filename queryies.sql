@@ -163,3 +163,12 @@ SELECT
         WHERE user.username = 'krish123') 
     GROUP BY post.post_id
     ORDER BY post.post_created_time DESC;
+
+    CREATE TABLE saved_posts(
+        id INTEGER NOT NULL PRIMARY KEY, 
+        post_id INTEGER, 
+        user_id INTEGER, 
+        saved_time DATETIME, 
+        FOREIGN KEY (post_id) REFERENCES post(post_id) ON DELETE CASCADE, 
+        FOREIGN KEY (user_id) REFERENCES user(user_id)
+    );
