@@ -437,3 +437,17 @@ app.get('/owner/saved', authenticateUser, async (request, response) => {
     const data = await db.all(getOwnerSavedPostsQuery);
     response.send({data})
 })
+
+app.get('/owner/info', authenticateUser, async (request, response) => {
+    const {username} = request;
+    const getOwnerInfoQuery = `
+        SELECT 
+            pet_name, full_name, profile_image_url, user_id
+        FROM 
+            user
+        WHERE 
+            username='${username}';
+    `;
+    const userDate = await db.get(getOwnerInfoQuery);
+    response.send(userDate)   
+})
