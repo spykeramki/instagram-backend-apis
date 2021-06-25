@@ -451,3 +451,29 @@ app.get('/owner/info', authenticateUser, async (request, response) => {
     const userDate = await db.get(getOwnerInfoQuery);
     response.send(userDate)   
 })
+
+app.get('/posts/:postId', authenticateUser, async(request, response) => {
+    const {postId} = request.params
+    const {username} = request
+    const getPostQuery = `
+    SELECT 
+        post.post_id as id,
+        user.profile_image_url as friend_profile_image,
+        user.full_name as friend_name,
+        post.post_url as post_content,
+        post.post_created_time as friend_post_time,
+        (SELECT full_name FROM user WHERE username='${username}') AS user,
+        COUNT(post_likes.id) AS likes
+    FROM (post 
+        JOIN user ON post.user_id = user.user_id) AS T 
+        JOIN followers ON followers.following_id = T.user_id
+        LEFT JOIN post_likes ON post.post_id = post_likes.post_id
+    WHERE post.post_id=${postId} AND 
+    followers.follower_id = (
+        SELECT user.user_id
+        FROM user
+        WHERE user.username = '${username}') ; 
+        `;
+    const data = await db.get(getPostQuery);
+    response.send({data})
+})
