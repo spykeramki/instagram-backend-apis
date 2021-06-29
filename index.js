@@ -460,6 +460,7 @@ app.get('/posts/:postId', authenticateUser, async(request, response) => {
         post.post_id as id,
         user.profile_image_url as friend_profile_image,
         user.full_name as friend_name,
+        user.pet_name as pet_name,
         post.post_url as post_content,
         post.post_created_time as friend_post_time,
         (SELECT full_name FROM user WHERE username='${username}') AS user,
@@ -475,5 +476,32 @@ app.get('/posts/:postId', authenticateUser, async(request, response) => {
         WHERE user.username = '${username}') ; 
         `;
     const data = await db.get(getPostQuery);
+    response.send({data})
+})
+
+app.get('/posts/:postId/other', async (request, response) => {
+    const {postId} = request.params
+    const {limit} = request.query
+    const getFriendOtherPostsQuery = `
+    SELECT 
+        post.post_id,
+        post.post_type,
+        post.post_url,
+        post.post_created_time,
+        user.username
+    FROM 
+        post
+        JOIN user ON post.user_id = user.user_id
+    WHERE 
+        post.post_id <>${postId}
+        AND user.user_id = (
+            SELECT user_id
+            FROM post
+            WHERE post_id = ${postId}
+        )
+    ORDER BY post.post_created_time DESC
+    LIMIT ${limit};`;
+
+    const data = await db.all(getFriendOtherPostsQuery)
     response.send({data})
 })
