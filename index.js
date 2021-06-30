@@ -228,7 +228,7 @@ app.get('/home/friendsuggestions', authenticateUser,async(request, response) => 
     const {username} = request
     const getSuggestionsQuery = `
     SELECT 
-        user.user_id as id,
+        user.user_id as user_id,
         user.profile_image_url as friend_profile_image,
         user.pet_name,
         user.full_name as friend_name
@@ -479,7 +479,7 @@ app.get('/posts/:postId', authenticateUser, async(request, response) => {
     response.send({data})
 })
 
-app.get('/posts/:postId/other', async (request, response) => {
+app.get('/posts/:postId/other', authenticateUser, async (request, response) => {
     const {postId} = request.params
     const {limit} = request.query
     const getFriendOtherPostsQuery = `
@@ -504,4 +504,17 @@ app.get('/posts/:postId/other', async (request, response) => {
 
     const data = await db.all(getFriendOtherPostsQuery)
     response.send({data})
+})
+
+app.post('/following', authenticateUser, async(request, response) => {
+    const followingDetails = request.body
+    const{followingUserId} = followingDetails
+    const {username} = request
+    const followUserQuery = `
+        INSERT INTO followers(following_id, follower_id)
+        SELECT ${followingUserId}, user_id 
+        FROM user
+        WHERE user.username = '${username}';`;
+    await db.run(followUserQuery)
+    response.send('Following user successfully')
 })
