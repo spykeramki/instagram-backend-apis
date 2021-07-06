@@ -4,7 +4,6 @@ const path = require('path');
 const{open}= require('sqlite');
 const sqlite3 = require('sqlite3');
 const jwt= require('jsonwebtoken');
-const { request, response } = require('express');
 
 const db_path = path.join(__dirname, 'instagram.db');
 
