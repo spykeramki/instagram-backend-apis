@@ -4,11 +4,19 @@ const path = require('path');
 const{open}= require('sqlite');
 const sqlite3 = require('sqlite3');
 const jwt= require('jsonwebtoken');
+const cors = require('cors');
 
 const db_path = path.join(__dirname, 'instagram.db');
 
 const app=express();
 app.use(express.json());
+
+app.use(cors({
+  origin: 'http://localhost:3004', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+  credentials: true 
+}));
+
 let db=null;
 const initializeDatabaseAndServer = async () => {
     try{
